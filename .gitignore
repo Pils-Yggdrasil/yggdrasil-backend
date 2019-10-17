@@ -57,5 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# scrapper folder
+
+scrapper/
+
 # next.js build output
 .next
