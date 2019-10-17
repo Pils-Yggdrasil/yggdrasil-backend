@@ -2,32 +2,45 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var portHTTP=3000
-console.log("Bonjour")
+var cors = require('cors')
+
 var indexRouter = require('./routes/index');
-console.log("Router for index ok")
+
 var app = express();
 
-console.log("App created")
+
+var allowedOrigins = ['http://localhost:8080'];
+app.use(cors({
+  origin: function(origin, callback){    // allow requests with no origin
+    // (like mobile apps or curl requests)
+    if(!origin) return callback(null, true);
+    if(allowedOrigins.indexOf(origin) === -1){
+      var msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}))
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-console.log("Public set")
+
 
 app.use('/', indexRouter);
-console.log("use /")
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  console.log("Oups")
+
   next(createError(404));
 });
 
-console.log("post use")
+
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
-  console.log(err,req,res,next)
+
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   // render the error page
@@ -36,7 +49,7 @@ app.use(function(err, req, res, next) {
 });
 
 app.listen(portHTTP, () => {
-  console.log("App started on port HTTP : "+portHTTP)
+
 })
 
 module.exports = app;
