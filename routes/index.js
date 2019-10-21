@@ -36,18 +36,41 @@ router.get('/key_words', function(req, res, next) {
   );
 })
 
+
+//10.1038/nrn3241   Default doi for testing
 router.get('/paper_id', function(req, res, next) {
   console.log("paper id called")
   console.log(req.query)
-  let api_url = 'http://api.semanticscholar.org/v1/paper/'+req.query.paper_id
+  let base_url = 'http://api.semanticscholar.org/v1/paper/'
+  let api_url = base_url+req.query.paper_id
   var options = {
     uri: api_url,
+    resolveWithFullResponse: true,
     json: true // Automatically parses the JSON string in the response
   }
+  references = []
   request(options)
 
   .then(doc=>{
-    console.log(doc)
+    doc=doc.body
+    doc.references.forEach(ref => {
+      options.uri=base_url+ref.paperId
+      request(options)
+
+      .then(doc=>{
+        references.push(doc)
+        console.log(references.length)
+        console.log(doc.statusCode)
+      })
+      .catch(err=>{
+        console.log("an error occured : ",err.statusCode)
+        if(err.statusCode == 504){
+          setTimeout(err => {
+            request(err.options).then(doc=>{console.log(doc.statusCode)})
+          },1000)
+        }
+      })
+    })
     res.json(
       [
         doc
@@ -56,7 +79,7 @@ router.get('/paper_id', function(req, res, next) {
   })
 
   .catch(error=>{
-    console.log(error)
+    res.json({error: error})
   })
 })
 
