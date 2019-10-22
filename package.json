@@ -13,6 +13,7 @@
     "http-errors": "^1.6.3",
     "morgan": "~1.9.1",
     "path": "^0.12.7",
-    "request-promise": "^4.2.4"
+    "request-promise": "^4.2.4",
+    "socket.io": "^2.3.0"
   }
 }
