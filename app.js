@@ -7,9 +7,10 @@ var cors = require('cors')
 var indexRouter = require('./routes/index');
 
 var app = express();
-
-
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 var allowedOrigins = ['http://localhost:8080'];
+
 app.use(cors({
   origin: function(origin, callback){    // allow requests with no origin
     // (like mobile apps or curl requests)
@@ -48,8 +49,12 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-app.listen(portHTTP, () => {
+io.on('connection', function(socket){
+  console.log('a user connected');
+});
 
+http.listen(portHTTP, () => {
+  console.log("Listen on port ", portHTTP)
 })
 
 module.exports = app;

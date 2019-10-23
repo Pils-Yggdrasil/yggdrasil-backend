@@ -42,9 +42,10 @@ router.get('/paper_id', function(req, res, next) {
   console.log("paper id called")
   console.log(req.query)
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
+  let stub_url = "http://api.semanticscholar.org/v1/paper/10.1038/nrn3241"
   let api_url = base_url+req.query.paper_id
   var options = {
-    uri: api_url,
+    uri: stub_url,
     resolveWithFullResponse: true,
     json: true // Automatically parses the JSON string in the response
   }
