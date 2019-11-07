@@ -4,14 +4,16 @@ var path = require('path');
 var portHTTP=3000
 var cors = require('cors')
 
+
 var indexRouter = require('./routes/index');
 
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+var socket_manager = require('./sockets/socket_manager.js').init(io);
 var allowedOrigins = ['http://localhost:8080'];
 
-var clients =[]
+
 
 app.use(cors({
   origin: function(origin, callback){    // allow requests with no origin
@@ -43,7 +45,6 @@ app.use(function(req, res, next) {
 // error handler
 app.use(function(err, req, res, next) {
   // set locals, only providing error in development
-
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   // render the error page
@@ -51,21 +52,13 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-io.on('connect', function(socket){
-  console.log('a user connected : ', socket.id);
-  clients.push(socket)
-  setTimeout(() => {
-    socket.disconnect(true);
-    let index = clients.map(cl => cl.id).findIndex(id => id==socket.id)
-    clients.splice(index, 1)
-  }, 5000);
-});
 
 http.listen(portHTTP, () => {
   console.log("Listen on port ", portHTTP)
 })
 
 module.exports =
-{ app:app,
-  sockets:clients,
+{
+  app:app,
+  io:io
 };
