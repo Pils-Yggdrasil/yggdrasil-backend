@@ -37,13 +37,14 @@ router.get('/key_words', function(req, res, next) {
 })
 
 
-//10.1038/nrn3241   Default doi for testing
+//10.1038/nrn3242   Default doi for testing
 router.get('/paper_id', function(req, res, next) {
   console.log("paper id called")
   console.log(req.query)
+  let paper_doi = "10.1038/nrn3242"
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
-  let stub_url = "http://api.semanticscholar.org/v1/paper/10.1038/nrn3241"
-  let api_url = base_url+req.query.paper_id
+  let stub_url = base_url + paper_doi;
+  let api_url = stub_url+req.query.paper_id
   var options = {
     uri: stub_url,
     resolveWithFullResponse: true,
