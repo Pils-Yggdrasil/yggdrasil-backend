@@ -59,15 +59,22 @@ router.get('/paper_id', function(req, res, next) {
     );
     console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
     console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    doc.citations.filter(ref=>ref.isInfluential).forEach(ref=>{
+    doc.citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
         socket.emit('new_node', doc.body);
       })
       .catch(err=>{
-        console.log("Error")
       })
     })
+    // doc.references.filter(ref=>ref.isInfluential).forEach(ref=>{
+    //   requestPaper(base_url+ref.paperId)
+    //   .then(doc=>{
+    //     socket.emit('new_node', doc.body);
+    //   })
+    //   .catch(err=>{
+    //   })
+    // })
   })
   .catch(error=>{
     res.json({error: error})
