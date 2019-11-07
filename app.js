@@ -11,6 +11,8 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var allowedOrigins = ['http://localhost:8080'];
 
+var clients =[]
+
 app.use(cors({
   origin: function(origin, callback){    // allow requests with no origin
     // (like mobile apps or curl requests)
@@ -49,12 +51,21 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-io.on('connection', function(socket){
-  console.log('a user connected');
+io.on('connect', function(socket){
+  console.log('a user connected : ', socket.id);
+  clients.push(socket)
+  setTimeout(() => {
+    socket.disconnect(true);
+    let index = clients.map(cl => cl.id).findIndex(id => id==socket.id)
+    clients.splice(index, 1)
+  }, 5000);
 });
 
 http.listen(portHTTP, () => {
   console.log("Listen on port ", portHTTP)
 })
 
-module.exports = app;
+module.exports =
+{ app:app,
+  sockets:clients,
+};
