@@ -57,9 +57,22 @@ router.get('/paper_id', function(req, res, next) {
         doc
       ]
     );
+    let counter = 1;
     console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
     console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    doc.citations.forEach(ref=>{
+    doc.citations.filter(ref=>ref.isInfluential).forEach(ref=>{
+      requestPaper(base_url+ref.paperId)
+      .then(doc=>{
+        console.log(counter)
+        console.log(doc.body.citations.length)
+        counter+=1;
+        socket.emit('new_node', doc.body);
+      })
+      .catch(err=>{
+        // console.log(err)
+      })
+    })
+    doc.references.filter(ref=>ref.isInfluential).forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
         socket.emit('new_node', doc.body);
@@ -67,19 +80,10 @@ router.get('/paper_id', function(req, res, next) {
       .catch(err=>{
       })
     })
-    // doc.references.filter(ref=>ref.isInfluential).forEach(ref=>{
-    //   requestPaper(base_url+ref.paperId)
-    //   .then(doc=>{
-    //     socket.emit('new_node', doc.body);
-    //   })
-    //   .catch(err=>{
-    //   })
-    // })
   })
   .catch(error=>{
     res.json({error: error})
   })
-  var disconnect = require('../sockets/socket_manager.js').disconnect(socket)
 })
 
 requestPaper = function(url){
