@@ -44,6 +44,8 @@ router.get('/paper_id', function(req, res, next) {
   let api_url = base_url+req.query.paper_id
   let socket_id = req.query.socket_id
   references = []
+  var topics = []
+  var topics_full = []
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
@@ -60,13 +62,24 @@ router.get('/paper_id', function(req, res, next) {
     let counter = 1;
     console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
     console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    doc.citations.filter(ref=>ref.isInfluential).forEach(ref=>{
+    var citations = doc.citations.filter(ref=>ref.isInfluential)
+    citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
         console.log(counter)
-        console.log(doc.body.citations.length)
         counter+=1;
+        // console.log(doc.body.citations.length)
         socket.emit('new_node', doc.body);
+        doc.body.topics.forEach(example=>{
+          // console.log(topic)
+
+          if(!(topics.includes(example.topicId))){
+            topics.push(example.topicId);
+          }
+          topics_full.push(example.topicId)
+
+          console.log("topics # : ",topics.length, "FULL TOPIC : ", topics_full.length)
+        })
       })
       .catch(err=>{
         // console.log(err)
@@ -76,10 +89,32 @@ router.get('/paper_id', function(req, res, next) {
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
         socket.emit('new_node', doc.body);
+        doc.body.topics.forEach(example=>{
+          /*
+          if((topics.findIndex(topic))> -1){
+            topics.push(topic);
+          }
+          topics_full.push(topic)
+          */
+
+          if(!(topics.includes(example.topicId))){
+            topics.push(example.topicId);
+          }
+          topics_full.push(example.topicId)
+
+        })
       })
       .catch(err=>{
       })
     })
+    doc.topics.forEach(example=>{
+      if(!(topics.includes(example.topicId))){
+        topics.push(example.topicId);
+      }
+      topics_full.push(example.topicId);
+    })
+
+    console.log("---------->    La famille : " + topics.length)
   })
   .catch(error=>{
     res.json({error: error})
