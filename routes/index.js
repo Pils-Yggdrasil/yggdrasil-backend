@@ -38,7 +38,7 @@ router.get('/key_words', function(req, res, next) {
 
 
 router.get('/paper_id', function(req, res, next) {
-  let paper_id = "10.1145/964725.633027"
+  let paper_id = "0796f6cd7f0403a854d67d525e9b32af3b277331"
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
   let stub_url = base_url + paper_id;
   let api_url = base_url+req.query.paper_id
@@ -48,7 +48,8 @@ router.get('/paper_id', function(req, res, next) {
   var topics_full = []
   var paper_topics = []
   var waiting_papers = []
-  var param_topic = 3;
+  var param_topic_ref = 1;
+  var param_topic_cit = 3;
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
@@ -57,8 +58,8 @@ router.get('/paper_id', function(req, res, next) {
   requestPaper(stub_url)
   .then(doc=>{
     doc=doc.body
-    doc.topics.forEach(var => {
-      paper_topics.push(var.topicId)
+    doc.topics.forEach(top => {
+      paper_topics.push(top.topicId)
     })
     res.json(
       [
@@ -76,12 +77,12 @@ router.get('/paper_id', function(req, res, next) {
         counter+=1;
         citation_topics = [];
         // console.log(doc.body.citations.length)
-        doc.body.topics.forEach(var => {
-          citation_topics.push(var.topicId)
+        doc.body.topics.forEach(top => {
+          citation_topics.push(top.topicId)
         })
         var is_in = 0;
-        citation_topics.forEach(var => {
-          if(paper_topics.includes(var)) {
+        citation_topics.forEach(top => {
+          if(paper_topics.includes(top)) {
             is_in += 1;
           }
         })
@@ -111,7 +112,24 @@ router.get('/paper_id', function(req, res, next) {
     doc.references.filter(ref=>ref.isInfluential).forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
-        socket.emit('new_node', doc.body);
+        ref_topics = [];
+        doc.body.topics.forEach(top => {
+          ref_topics.push(top.topicId);
+        })
+        var is_in = 0;
+        ref_topics.forEach(top => {
+          if(paper_topics.includes(top)) {
+            is_in += 1
+          }
+        })
+        if(is_in >= param_topic) {
+          socket.emit('new_node', doc.body);
+          console.log("REF SENT TO FRONT !")
+        } else {
+          waiting_papers.push(doc.body)
+          console.log("WAITING REF !")
+        }
+        //socket.emit('new_node', doc.body);
         doc.body.topics.forEach(example=>{
           /*
           if((topics.findIndex(topic))> -1){
