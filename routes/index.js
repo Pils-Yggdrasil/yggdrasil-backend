@@ -38,7 +38,7 @@ router.get('/key_words', function(req, res, next) {
 
 
 router.get('/paper_id', function(req, res, next) {
-  let paper_id = "0796f6cd7f0403a854d67d525e9b32af3b277331"
+  let paper_id = "10.1145/964725.633027"
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
   let stub_url = base_url + paper_id;
   let api_url = base_url+req.query.paper_id
