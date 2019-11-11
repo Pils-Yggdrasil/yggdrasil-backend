@@ -71,7 +71,7 @@ router.get('/paper_id', function(req, res, next) {
       .finally(()=>{
         counter+=1;
         console.log(counter)
-        if(counter == citations.length - 1){
+        if(counter == 90){
           socket.emit('done')
         }
       })
