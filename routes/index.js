@@ -46,6 +46,9 @@ router.get('/paper_id', function(req, res, next) {
   references = []
   var topics = []
   var topics_full = []
+  var paper_topics = []
+  var waiting_papers = []
+  var param_topic = 3;
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
@@ -54,6 +57,9 @@ router.get('/paper_id', function(req, res, next) {
   requestPaper(stub_url)
   .then(doc=>{
     doc=doc.body
+    doc.topics.forEach(var => {
+      paper_topics.push(var.topicId)
+    })
     res.json(
       [
         doc
@@ -68,8 +74,25 @@ router.get('/paper_id', function(req, res, next) {
       .then(doc=>{
         console.log(counter)
         counter+=1;
+        citation_topics = [];
         // console.log(doc.body.citations.length)
-        socket.emit('new_node', doc.body);
+        doc.body.topics.forEach(var => {
+          citation_topics.push(var.topicId)
+        })
+        var is_in = 0;
+        citation_topics.forEach(var => {
+          if(paper_topics.includes(var)) {
+            is_in += 1;
+          }
+        })
+        if(is_in >= param_topic){
+          socket.emit('new_node', doc.body);
+          console.log("CITATION SENT TO FRONT !")
+        } else {
+          waiting_papers.push(doc.body)
+          console.log("WAITING CITATION !")
+        }
+
         doc.body.topics.forEach(example=>{
           // console.log(topic)
 
