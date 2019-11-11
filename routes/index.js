@@ -47,7 +47,9 @@ router.get('/paper_id', function(req, res, next) {
   var paper_topics = []
   var waiting_papers = []
   var param_topic_ref = 1;
-  var param_topic_cit = 3;
+  var param_topic_cit = 1;
+  var param_exponent_cit = 2;
+  var param_exponent_ref = 2;
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
@@ -81,6 +83,7 @@ router.get('/paper_id', function(req, res, next) {
             is_in += 1;
           }
         })
+        doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
         if(is_in >= param_topic_cit){
           socket.emit('new_node', doc.body);
           console.log("CITATION SENT TO FRONT !")
@@ -119,6 +122,7 @@ router.get('/paper_id', function(req, res, next) {
           ref_topics.push(top.topicId);
         })
         var is_in = 0;
+
         ref_topics.forEach(top => {
           if(paper_topics.includes(top)) {
             is_in += 1
@@ -168,6 +172,10 @@ router.get('/paper_id', function(req, res, next) {
   })
 })
 
+computeCpDScore= function(doc, exponent){
+  let age = new Date().getFullYear() - doc.year;
+  return doc.citations.length / Math.pow(age+1, 1/exponent)
+}
 
 requestPaper = function(url){
   var options = {
