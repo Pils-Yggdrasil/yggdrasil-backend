@@ -40,16 +40,13 @@ router.get('/key_words', function(req, res, next) {
 router.get('/paper_id', function(req, res, next) {
   let paper_id = "0796f6cd7f0403a854d67d525e9b32af3b277331"
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
-  let stub_url = base_url + paper_id;
-  let api_url = base_url+req.query.paper_id
   let socket_id = req.query.socket_id
   references = []
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
   var socket = sockets.find(sock => sock.id == socket_id)
-  console.log(socket.id)
-  requestPaper(stub_url)
+  requestPaper(base_url+paper_id)
   .then(doc=>{
     doc=doc.body
     res.json(
@@ -58,26 +55,44 @@ router.get('/paper_id', function(req, res, next) {
       ]
     );
     let counter = 1;
-    console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
-    console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    doc.citations.filter(ref=>ref.isInfluential).forEach(ref=>{
+    var references = doc.references.filter(ref=> ref.isInfluential)
+    var citations = doc.citations.filter(cit=> cit.isInfluential)
+    console.log("# of references : ",references.length)
+    console.log("# of citations : ",citations.length)
+    citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
-        console.log(counter)
-        console.log(doc.body.citations.length)
-        counter+=1;
         socket.emit('new_node', doc.body);
+        console.log(doc.body.citations.length)
       })
       .catch(err=>{
-        // console.log(err)
+        console.log(err.message)
+      })
+      .finally(()=>{
+        counter+=1;
+        console.log(counter)
+        if(counter == citations.length - 1){
+          socket.emit('done')
+        }
       })
     })
-    doc.references.filter(ref=>ref.isInfluential).forEach(ref=>{
+    references.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
         socket.emit('new_node', doc.body);
+        console.log(doc.body.citations.length)
       })
       .catch(err=>{
+        console.log(err.message)
+      })
+      .finally(()=>{
+        counter+=1;
+        console.log(counter)
+        counter+=1;
+        console.log(counter)
+        if(counter == references.length - 1){
+          socket.emit('done')
+        }
       })
     })
   })
@@ -85,6 +100,8 @@ router.get('/paper_id', function(req, res, next) {
     res.json({error: error})
   })
 })
+
+
 
 requestPaper = function(url){
   var options = {
