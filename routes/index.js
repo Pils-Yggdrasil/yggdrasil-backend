@@ -169,7 +169,6 @@ router.get('/paper_id', function(req, res, next) {
 })
 
 
-
 requestPaper = function(url){
   var options = {
     uri: url,
