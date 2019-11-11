@@ -57,6 +57,7 @@ router.get('/paper_id', function(req, res, next) {
   requestPaper(base_url+paper_id)
   .then(doc=>{
     doc=doc.body
+    doc.cdpScore = computeCpDScore(doc, param_exponent_cit)
     doc.topics.forEach(top => {
       paper_topics.push(top.topicId)
     })
@@ -68,7 +69,7 @@ router.get('/paper_id', function(req, res, next) {
     let counter = 1;
     console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
     console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    var citations = doc.citations.filter(ref=>ref.isInfluential)
+    var citations = doc.citations
     citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
@@ -109,7 +110,7 @@ router.get('/paper_id', function(req, res, next) {
       .finally(()=>{
         counter+=1;
         console.log(counter)
-        if(counter == 90){
+        if(counter == 500){
           socket.emit('done')
         }
       })
