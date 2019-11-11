@@ -39,9 +39,9 @@ router.get('/key_words', function(req, res, next) {
 
 router.get('/paper_id', function(req, res, next) {
   let paper_id = "0796f6cd7f0403a854d67d525e9b32af3b277331"
+  // paper_id = "10.1051/m2an/2013133"
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
   let socket_id = req.query.socket_id
-  references = []
   var topics = []
   var topics_full = []
   var paper_topics = []
@@ -69,7 +69,8 @@ router.get('/paper_id', function(req, res, next) {
     let counter = 1;
     console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
     console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    var citations = doc.citations
+    var citations = doc.citations.filter(ref=>ref.isInfluential)
+    var references = doc.references.filter(ref=>ref.isInfluential)
     citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
