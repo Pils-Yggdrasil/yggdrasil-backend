@@ -42,6 +42,12 @@ router.get('/paper_id', function(req, res, next) {
   let base_url = 'http://api.semanticscholar.org/v1/paper/'
   let socket_id = req.query.socket_id
   references = []
+  var topics = []
+  var topics_full = []
+  var paper_topics = []
+  var waiting_papers = []
+  var param_topic_ref = 1;
+  var param_topic_cit = 3;
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
@@ -49,21 +55,50 @@ router.get('/paper_id', function(req, res, next) {
   requestPaper(base_url+paper_id)
   .then(doc=>{
     doc=doc.body
+    doc.topics.forEach(top => {
+      paper_topics.push(top.topicId)
+    })
     res.json(
       [
         doc
       ]
     );
     let counter = 1;
-    var references = doc.references.filter(ref=> ref.isInfluential)
-    var citations = doc.citations.filter(cit=> cit.isInfluential)
-    console.log("# of references : ",references.length)
-    console.log("# of citations : ",citations.length)
+    console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
+    console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
+    var citations = doc.citations.filter(ref=>ref.isInfluential)
     citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
-        socket.emit('new_node', doc.body);
-        console.log(doc.body.citations.length)
+        citation_topics = [];
+        // console.log(doc.body.citations.length)
+        doc.body.topics.forEach(top => {
+          citation_topics.push(top.topicId)
+        })
+        var is_in = 0;
+        citation_topics.forEach(top => {
+          if(paper_topics.includes(top)) {
+            is_in += 1;
+          }
+        })
+        if(is_in >= param_topic_cit){
+          socket.emit('new_node', doc.body);
+          console.log("CITATION SENT TO FRONT !")
+        } else {
+          waiting_papers.push(doc.body)
+          console.log("WAITING CITATION !")
+        }
+
+        // SOMETHING USED FOR TESTING
+        // doc.body.topics.forEach(example=>{
+        //   // console.log(topic)
+        //   if(!(topics.includes(example.topicId))){
+        //     topics.push(example.topicId);
+        //   }
+        //   topics_full.push(example.topicId)
+        //
+        //   console.log("topics # : ",topics.length, "FULL TOPIC : ", topics_full.length)
+        // })
       })
       .catch(err=>{
         console.log(err.message)
@@ -79,8 +114,32 @@ router.get('/paper_id', function(req, res, next) {
     references.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
-        socket.emit('new_node', doc.body);
-        console.log(doc.body.citations.length)
+        ref_topics = [];
+        doc.body.topics.forEach(top => {
+          ref_topics.push(top.topicId);
+        })
+        var is_in = 0;
+        ref_topics.forEach(top => {
+          if(paper_topics.includes(top)) {
+            is_in += 1
+          }
+        })
+        if(is_in >= param_topic_ref) {
+          socket.emit('new_node', doc.body);
+          console.log("REF SENT TO FRONT !")
+        } else {
+          waiting_papers.push(doc.body)
+          console.log("WAITING REF !")
+        }
+
+        // SOMETHING USED FOR TESTING
+        // doc.body.topics.forEach(example=>{
+        //   if(!(topics.includes(example.topicId))){
+        //     topics.push(example.topicId);
+        //   }
+        //   topics_full.push(example.topicId)
+        //
+        // })
       })
       .catch(err=>{
         console.log(err.message)
@@ -88,13 +147,21 @@ router.get('/paper_id', function(req, res, next) {
       .finally(()=>{
         counter+=1;
         console.log(counter)
-        counter+=1;
-        console.log(counter)
         if(counter == references.length - 1){
           socket.emit('done')
         }
       })
     })
+
+    //SOMETHING USED FOR TESTING
+    // doc.topics.forEach(example=>{
+    //   if(!(topics.includes(example.topicId))){
+    //     topics.push(example.topicId);
+    //   }
+    //   topics_full.push(example.topicId);
+    // })
+    //
+    // console.log("---------->    La famille : " + topics.length)
   })
   .catch(error=>{
     res.json({error: error})
