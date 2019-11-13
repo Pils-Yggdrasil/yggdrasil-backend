@@ -67,10 +67,11 @@ router.get('/paper_id', function(req, res, next) {
       ]
     );
     let counter = 1;
-    console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
-    console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
-    var citations = doc.citations.filter(ref=>ref.isInfluential)
-    var references = doc.references.filter(ref=>ref.isInfluential)
+    // console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
+    // console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
+    var citations = doc.citations.filter(ref=>ref.isInfluential).sort((a,b) => a.influentialCitationCount - b.influentialCitationCount)
+    var references = doc.references.filter(ref=>ref.isInfluential).sort((a,b) => a.influentialCitationCount - b.influentialCitationCount)
+    console.log(citations[0])
     citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
@@ -88,10 +89,8 @@ router.get('/paper_id', function(req, res, next) {
         doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
         if(is_in >= param_topic_cit){
           socket.emit('new_node', doc.body);
-          console.log("CITATION SENT TO FRONT !")
         } else {
           waiting_papers.push(doc.body)
-          console.log("WAITING CITATION !")
         }
 
         // SOMETHING USED FOR TESTING
@@ -132,10 +131,8 @@ router.get('/paper_id', function(req, res, next) {
         })
         if(is_in >= param_topic_ref) {
           socket.emit('new_node', doc.body);
-          console.log("REF SENT TO FRONT !")
         } else {
           waiting_papers.push(doc.body)
-          console.log("WAITING REF !")
         }
 
         // SOMETHING USED FOR TESTING
