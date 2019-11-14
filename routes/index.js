@@ -47,7 +47,7 @@ router.get('/paper_id', function(req, res, next) {
   var paper_topics = []
   var waiting_papers = []
   var param_topic_ref = 1;
-  var param_topic_cit = 1;
+  var param_topic_cit = 2;
   var param_exponent_cit = 2;
   var param_exponent_ref = 2;
   var sockets = require('../sockets/socket_manager.js').sockets
@@ -69,10 +69,9 @@ router.get('/paper_id', function(req, res, next) {
       ]
     );
     let counter = 1;
-    console.log("# of references : ",doc.references.filter(ref=> ref.isInfluential).length)
-    console.log("# of citations : ",doc.citations.filter(ref=> ref.isInfluential).length)
     var citations = doc.citations.filter(ref=>ref.isInfluential)
     var references = doc.references.filter(ref=>ref.isInfluential)
+    console.log(citations[0])
     citations.forEach(ref=>{
       requestPaper(base_url+ref.paperId)
       .then(doc=>{
@@ -90,22 +89,10 @@ router.get('/paper_id', function(req, res, next) {
         doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
         if(is_in >= param_topic_cit){
           socket.emit('new_node', doc.body);
-          console.log("CITATION SENT TO FRONT !")
         } else {
           waiting_papers.push(doc.body)
-          console.log("WAITING CITATION !")
         }
 
-        // SOMETHING USED FOR TESTING
-        // doc.body.topics.forEach(example=>{
-        //   // console.log(topic)
-        //   if(!(topics.includes(example.topicId))){
-        //     topics.push(example.topicId);
-        //   }
-        //   topics_full.push(example.topicId)
-        //
-        //   console.log("topics # : ",topics.length, "FULL TOPIC : ", topics_full.length)
-        // })
       })
       .catch(err=>{
         console.log(err.message)
@@ -134,20 +121,10 @@ router.get('/paper_id', function(req, res, next) {
         })
         if(is_in >= param_topic_ref) {
           socket.emit('new_node', doc.body);
-          console.log("REF SENT TO FRONT !")
         } else {
           waiting_papers.push(doc.body)
-          console.log("WAITING REF !")
         }
 
-        // SOMETHING USED FOR TESTING
-        // doc.body.topics.forEach(example=>{
-        //   if(!(topics.includes(example.topicId))){
-        //     topics.push(example.topicId);
-        //   }
-        //   topics_full.push(example.topicId)
-        //
-        // })
       })
       .catch(err=>{
         console.log(err.message)
@@ -162,20 +139,24 @@ router.get('/paper_id', function(req, res, next) {
       })
     })
 
-    //SOMETHING USED FOR TESTING
-    // doc.topics.forEach(example=>{
-    //   if(!(topics.includes(example.topicId))){
-    //     topics.push(example.topicId);
-    //   }
-    //   topics_full.push(example.topicId);
-    // })
-    //
-    // console.log("---------->    La famille : " + topics.length)
+
   })
   .catch(error=>{
     res.json({error: error})
   })
 })
+
+testTopics = function(doc, topics_full, topics){
+  // SOMETHING USED fOR TESTING
+  doc.topics.forEach(example=>{
+    if(!(topics.includes(example.topicId))){
+      topics.push(example.topicId);
+    }
+    topics_full.push(example.topicId);
+  })
+
+  console.log("---------->    La famille : " + topics.length)
+}
 
 computeCpDScore= function(doc, exponent){
   let age = new Date().getFullYear() - doc.year;
