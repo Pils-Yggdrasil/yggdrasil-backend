@@ -26,14 +26,30 @@ router.get('/author', function(req, res, next) {
 })
 
 router.get('/key_words', function(req, res, next) {
-  console.log("key words lookup")
-  res.json(
-    [
-      {
-        keyTest: "key words"
-      }
-    ]
-  );
+  let url = "https://api.crossref.org/works?query.bibliographic=bgp"
+  var papers = [];
+  requestPaper(url)
+  .then(list => {
+    list = list.body.message;
+    list.items.forEach(paper => {
+      let base_url = 'http://api.semanticscholar.org/v1/paper/'
+      requestPaper(base_url+paper.DOI)
+      .then(obj => {
+        obj = obj.body;
+        papers.push(obj)
+        console.log("--> = " + papers)
+      })
+      .catch(err => {
+        //console.log(err.message)
+      })
+      .finally()
+    })
+    console.log("PAPERS = "+ papers)
+  })
+  .catch(err => {
+    //console.log(err.message)
+  })
+  .finally()
 })
 
 
@@ -54,7 +70,7 @@ router.get('/paper_id', function(req, res, next) {
   console.log("# of connections : ",sockets.length)
   console.log("This socket is ",socket_id)
   var socket = sockets.find(sock => sock.id == socket_id)
-  
+
   requestPaper(base_url+paper_id)
   .then(doc=>{
     doc=doc.body
