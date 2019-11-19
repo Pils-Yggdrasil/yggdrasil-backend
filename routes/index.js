@@ -26,30 +26,39 @@ router.get('/author', function(req, res, next) {
 })
 
 router.get('/key_words', function(req, res, next) {
-  let url = "https://api.crossref.org/works?query.bibliographic=bgp"
-  var papers = [];
-  requestPaper(url)
-  .then(list => {
-    list = list.body.message;
-    list.items.forEach(paper => {
-      let base_url = 'http://api.semanticscholar.org/v1/paper/'
-      requestPaper(base_url+paper.DOI)
-      .then(obj => {
-        obj = obj.body;
-        papers.push(obj)
-        console.log("--> = " + papers)
+  try {
+    var sockets = require('../sockets/socket_manager.js').sockets
+    let url = "https://api.crossref.org/works?query.bibliographic=bgp&rows=30&sort=score&order=desc"
+    let socket_id = req.query.socket_id;
+    var papers = [];
+    var socket = sockets.find(sock => sock.id == socket_id)
+    requestPaper(url)
+    .then(list => {
+      list = list.body.message;
+      list.items.forEach(paper => {
+        let base_url = 'http://api.semanticscholar.org/v1/paper/'
+        requestPaper(base_url+paper.DOI)
+        .then(obj => {
+          obj = obj.body;
+          obj.cdpScore = computeCpDScore(obj, 2)
+          console.log(obj)
+          socket.emit('new_node', obj);
+        })
+        .catch(err => {
+          console.log(err.message)
+        })
+        .finally()
       })
-      .catch(err => {
-        //console.log(err.message)
-      })
-      .finally()
     })
-    console.log("PAPERS = "+ papers)
-  })
-  .catch(err => {
-    //console.log(err.message)
-  })
-  .finally()
+    .catch(err => {
+      //console.log(err.message)
+    })
+    .finally()
+    console.log("PAPERS ="+papers)
+  } catch (err) {
+    console.log(err.message)
+    res.json({error : err.message})
+  }
 })
 
 
