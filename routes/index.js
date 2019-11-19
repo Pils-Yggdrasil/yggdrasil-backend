@@ -87,11 +87,8 @@ router.get('/paper_id', function(req, res, next) {
     doc.topics.forEach(top => {
       paper_topics.push(top.topicId)
     })
-    res.json(
-      [
-        doc
-      ]
-    );
+    res.json({success:true})
+    socket.emit('new_node', doc);
     let counter = 1;
     var citations = doc.citations.filter(ref=>ref.isInfluential)
     var references = doc.references.filter(ref=>ref.isInfluential)
