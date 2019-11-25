@@ -25,7 +25,7 @@ var disconnectSocket = function(socket){
 
 
 var userLeave = function(socket){
-  // console.log("a user WANTS to leave : ", socket_id);
+  console.log("a user WANTS to leave : ", socket_id);
   // let socket = clients.find(c => c.id == socket_id)
   // console.log(socket)
   disconnectSocket(socket)
