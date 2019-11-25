@@ -26,15 +26,71 @@ router.get('/author', function(req, res, next) {
 })
 
 router.get('/key_words', function(req, res, next) {
-  console.log("key words lookup")
-  res.json(
-    [
-      {
-        keyTest: "key words"
-      }
-    ]
-  );
+  try {
+    var sockets = require('../sockets/socket_manager.js').sockets
+    let socket_id = req.query.socket_id;
+    var papers_score = [];
+    var papers_count = [];
+    var socket = sockets.find(sock => sock.id == socket_id)
+    var url_cross = "https://api.crossref.org/works?filter=type:journal-article&query.bibliographic="
+    var url_sem = 'http://api.semanticscholar.org/v1/paper/'
+    //var key_words = req.query.key_words.replace(/ /g, "+");
+    var key_words = "Gradient based learning";
+    url_cross = url_cross+key_words+"&facet=publisher-name:10&rows=25&sort=relevance&order=desc"
+    res.json({success:true})
+
+    requestPaper(url_cross)
+    .then(list => {
+      list = list.body.message.items;
+      list.forEach(paper => {
+        requestPaper(url_sem+paper.DOI)
+        .then(pap => {
+          pap = pap.body;
+          console.log("TITLE = "+pap.title)
+          pap.cdpScore = computeCpDScore(pap, 2)
+          socket.emit('new_node', pap);
+          pap.citations.forEach(citation => {
+            requestPaper(url_sem+citation.paperId)
+            .then(cit => {
+              cit = cit.body;
+              console.log("CIT = "+cit.title)
+              cit.cdpScore = computeCpDScore(cit, 2)
+              socket.emit('new_node', cit);
+            })
+            .catch(err => {
+              console.log(err.message)
+            })
+          })
+          pap.references.forEach(reference => {
+            requestPaper(url_sem+reference.paperId)
+            .then(ref => {
+              ref = ref.body;
+              console.log("REF = "+ref.title)
+              ref.cdpScore = computeCpDScore(ref, 2)
+              socket.emit('new_node', ref);
+            })
+            .catch(err => {
+              console.log(err.message)
+            })
+          })
+
+        })
+        .catch(err => {
+          console.log(err.message)
+        })
+      })
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
+    .finally()
+
+  } catch (err) {
+    console.log(err.message)
+    res.json({error : err.message})
+  }
 })
+
 
 
 router.get('/paper_id', function(req, res, next) {
@@ -63,11 +119,8 @@ router.get('/paper_id', function(req, res, next) {
     doc.topics.forEach(top => {
       paper_topics.push(top.topicId)
     })
-    res.json(
-      [
-        doc
-      ]
-    );
+    res.json({success:true})
+    socket.emit('new_node', doc);
     let counter = 1;
     var citations = doc.citations.filter(ref=>ref.isInfluential)
     var references = doc.references.filter(ref=>ref.isInfluential)
