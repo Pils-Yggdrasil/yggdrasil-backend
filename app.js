@@ -11,7 +11,7 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var socket_manager = require('./sockets/socket_manager.js').init(io);
-var allowedOrigins = ['http://localhost:8080'];
+var allowedOrigins = ['http://localhost:8080','http://vps758172.ovh.net'];
 
 
 
@@ -49,7 +49,9 @@ app.use(function(err, req, res, next) {
   res.locals.error = req.app.get('env') === 'development' ? err : {};
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  console.log(err)
+  res.json({'error':err});
+  next();
 });
 
 

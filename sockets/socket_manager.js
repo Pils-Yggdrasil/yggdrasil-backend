@@ -3,6 +3,7 @@ console.log("I am goods")
 var clients =[]
 
 var _init_manager = function(io){
+  console.log("initialise");
   io.on('connect', onRequest);
 }
 
