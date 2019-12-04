@@ -11,7 +11,7 @@ var onRequest = function(socket){
   console.log('a user connected : ', socket.id);
   clients.push(socket);
   //socket.emit("id", socket.id)
-  setTimeout(disconnectSocket.bind(null,socket), 120000);
+  setTimeout(disconnectSocket.bind(null,socket), 3600000);
   socket.on('userLeave', userLeave.bind(null,socket));
 }
 

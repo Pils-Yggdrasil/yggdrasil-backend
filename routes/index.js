@@ -106,12 +106,13 @@ router.get('/paper_id', function(req, res, next) {
   var param_topic_cit = 2;
   var param_exponent_cit = 2;
   var param_exponent_ref = 2;
+  paper_id = req.query.paper_id
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ", sockets.length)
   console.log("This socket is ", socket_id)
 
   var socket = sockets.find(sock => sock.id == socket_id)
-
+  console.log(socket.id)
   requestPaper(base_url + paper_id)
     .then(doc => {
       doc = doc.body
@@ -124,11 +125,12 @@ router.get('/paper_id', function(req, res, next) {
       })
       socket.emit('new_node', doc);
       let counter = 1;
-      var citations = doc.citations.filter(ref => ref.isInfluential)
-      var references = doc.references.filter(ref => ref.isInfluential)
-      console.log(citations[0])
+      var citations = doc.citations
+      var references = doc.references
+      console.log(citations)
       citations.forEach(ref => {
-        requestPaper(base_url + ref.paperId)
+        console.log(ref)
+	requestPaper(base_url + ref.paperId)
           .then(doc => {
             citation_topics = [];
             // console.log(doc.body.citations.length)
