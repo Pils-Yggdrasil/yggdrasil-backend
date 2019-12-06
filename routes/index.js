@@ -127,10 +127,9 @@ router.get('/paper_id', function(req, res, next) {
       let counter = 1;
       var citations = doc.citations
       var references = doc.references
-      console.log(citations)
+      console.log(citations.length)
       citations.forEach(ref => {
-        console.log(ref)
-	requestPaper(base_url + ref.paperId)
+        requestPaper(base_url + ref.paperId)
           .then(doc => {
             citation_topics = [];
             // console.log(doc.body.citations.length)
@@ -156,10 +155,6 @@ router.get('/paper_id', function(req, res, next) {
           })
           .finally(() => {
             counter += 1;
-            console.log(counter)
-            if (counter == 500) {
-              socket.emit('done')
-            }
           })
       })
       references.forEach(ref => {
@@ -189,10 +184,6 @@ router.get('/paper_id', function(req, res, next) {
 
           .finally(() => {
             counter += 1;
-            console.log(counter)
-            if (counter == references.length - 1) {
-              socket.emit('done')
-            }
           })
       })
 
