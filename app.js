@@ -1,7 +1,7 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var portHTTP=3000
+var portHTTP=8080
 var cors = require('cors')
 
 
@@ -11,7 +11,7 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 var socket_manager = require('./sockets/socket_manager.js').init(io);
-var allowedOrigins = ['http://localhost:8080','http://vps758172.ovh.net'];
+var allowedOrigins = ['http://localhost:8080','http://vps758172.ovh.net','http://vps758172.ovh.net:8080'];
 
 
 
