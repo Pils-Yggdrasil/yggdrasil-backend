@@ -30,7 +30,7 @@ router.get('/key_words', function(req, res, next) {
     var socket = sockets.find(sock => sock.id == socket_id)
     var url_cross = "https://api.crossref.org/works?filter=type:journal-article&query.bibliographic="
     var url_sem = 'http://api.semanticscholar.org/v1/paper/'
-    var key_words = req.query.key_words.replace(/ /g, "+");
+    var key_words = req.query.paper_id.replace(/ /g, "+");
     // var key_words = "Gradient based learning";
     url_cross = url_cross + key_words + "&facet=publisher-name:10&rows=25&sort=relevance&order=desc"
     res.json({
