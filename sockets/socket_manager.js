@@ -3,6 +3,7 @@ console.log("I am goods")
 var clients =[]
 
 var _init_manager = function(io){
+  console.log("initialise");
   io.on('connect', onRequest);
 }
 
@@ -10,7 +11,7 @@ var onRequest = function(socket){
   console.log('a user connected : ', socket.id);
   clients.push(socket);
   //socket.emit("id", socket.id)
-  setTimeout(disconnectSocket.bind(null,socket), 120000);
+  setTimeout(disconnectSocket.bind(null,socket), 3600000);
   socket.on('userLeave', userLeave.bind(null,socket));
 }
 

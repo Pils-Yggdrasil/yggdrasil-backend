@@ -30,8 +30,8 @@ router.get('/key_words', function(req, res, next) {
     var socket = sockets.find(sock => sock.id == socket_id)
     var url_cross = "https://api.crossref.org/works?filter=type:journal-article&query.bibliographic="
     var url_sem = 'http://api.semanticscholar.org/v1/paper/'
-    //var key_words = req.query.key_words.replace(/ /g, "+");
-    var key_words = "Gradient based learning";
+    var key_words = req.query.paper_id.replace(/ /g, "+");
+    // var key_words = "Gradient based learning";
     url_cross = url_cross + key_words + "&facet=publisher-name:10&rows=25&sort=relevance&order=desc"
     res.json({
       success: true
@@ -109,9 +109,10 @@ router.get('/paper_id', function(req, res, next) {
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ", sockets.length)
   console.log("This socket is ", socket_id)
+  paper_id = req.query.paper_id
 
   var socket = sockets.find(sock => sock.id == socket_id)
-
+  console.log(socket.id)
   requestPaper(base_url + paper_id)
     .then(doc => {
       doc = doc.body
@@ -124,9 +125,9 @@ router.get('/paper_id', function(req, res, next) {
       })
       socket.emit('new_node', doc);
       let counter = 1;
-      var citations = doc.citations.filter(ref => ref.isInfluential)
-      var references = doc.references.filter(ref => ref.isInfluential)
-      console.log(citations[0])
+      var citations = doc.citations
+      var references = doc.references
+      console.log(citations.length)
       citations.forEach(ref => {
         requestPaper(base_url + ref.paperId)
           .then(doc => {
@@ -154,10 +155,6 @@ router.get('/paper_id', function(req, res, next) {
           })
           .finally(() => {
             counter += 1;
-            console.log(counter)
-            if (counter == 500) {
-              socket.emit('done')
-            }
           })
       })
       references.forEach(ref => {
@@ -187,10 +184,6 @@ router.get('/paper_id', function(req, res, next) {
 
           .finally(() => {
             counter += 1;
-            console.log(counter)
-            if (counter == references.length - 1) {
-              socket.emit('done')
-            }
           })
       })
 
