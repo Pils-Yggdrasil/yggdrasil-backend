@@ -30,8 +30,8 @@ router.get('/key_words', function(req, res, next) {
     var socket = sockets.find(sock => sock.id == socket_id)
     var url_cross = "https://api.crossref.org/works?filter=type:journal-article&query.bibliographic="
     var url_sem = 'http://api.semanticscholar.org/v1/paper/'
-    //var key_words = req.query.key_words.replace(/ /g, "+");
-    var key_words = "Gradient based learning";
+    var key_words = req.query.key_words.replace(/ /g, "+");
+    // var key_words = "Gradient based learning";
     url_cross = url_cross + key_words + "&facet=publisher-name:10&rows=25&sort=relevance&order=desc"
     res.json({
       success: true
@@ -106,10 +106,10 @@ router.get('/paper_id', function(req, res, next) {
   var param_topic_cit = 2;
   var param_exponent_cit = 2;
   var param_exponent_ref = 2;
-  paper_id = req.query.paper_id
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ", sockets.length)
   console.log("This socket is ", socket_id)
+  paper_id = req.query.paper_id
 
   var socket = sockets.find(sock => sock.id == socket_id)
   console.log(socket.id)
