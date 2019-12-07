@@ -171,6 +171,7 @@ router.get('/paper_id', function(req, res, next) {
                 is_in += 1
               }
             })
+            doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
             if (is_in >= param_topic_ref) {
               socket.emit('new_node', doc.body);
             } else {
@@ -209,7 +210,7 @@ testTopics = function(doc, topics_full, topics) {
 }
 
 computeCpDScore = function(doc, exponent) {
-  let age = new Date().getFullYear() - doc.year;
+  let age = new Date().getFullYear() - parseInt(doc.year);
   return doc.citations.length / Math.pow(age + 1, 1 / exponent)
 }
 
