@@ -36,53 +36,27 @@ router.get('/key_words', function(req, res, next) {
     res.json({
       success: true
     })
-
     requestPaper(url_cross)
-      .then(list => {
-        list = list.body.message.items;
-        list.forEach(paper => {
-          requestPaper(url_sem + paper.DOI)
-            .then(pap => {
-              pap = pap.body;
-              console.log("TITLE = " + pap.title)
-              pap.cdpScore = computeCpDScore(pap, 2)
-              socket.emit('new_node', pap);
-              pap.citations.forEach(citation => {
-                requestPaper(url_sem + citation.paperId)
-                  .then(cit => {
-                    cit = cit.body;
-                    console.log("CIT = " + cit.title)
-                    cit.cdpScore = computeCpDScore(cit, 2)
-                    socket.emit('new_node', cit);
-                  })
-                  .catch(err => {
-                    console.log(err.message)
-                  })
-              })
-              pap.references.forEach(reference => {
-                requestPaper(url_sem + reference.paperId)
-                  .then(ref => {
-                    ref = ref.body;
-                    console.log("REF = " + ref.title)
-                    ref.cdpScore = computeCpDScore(ref, 2)
-                    socket.emit('new_node', ref);
-                  })
-                  .catch(err => {
-                    console.log(err.message)
-                  })
-              })
-
-            })
-            .catch(err => {
-              console.log(err.message)
-            })
+    .then(list => {
+      list = list.body.message.items;
+      list.forEach(paper => {
+        requestPaper(url_sem + paper.DOI)
+        .then(pap => {
+          pap = pap.body;
+          console.log("TITLE = " + pap.title)
+          pap.cdpScore = computeCpDScore(pap, 2)
+          socket.emit('new_node', pap);
+          xplore(url_sem, pap.citations, 0, 0, socket)
+          xplore(url_sem, pap.references, 0, 0, socket)
+        })
+        .catch(err => {
+          console.log(err.message)
         })
       })
-      .catch(err => {
-        console.log(err.message)
-      })
-      .finally()
-
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
   } catch (err) {
     console.log(err.message)
     res.json({
@@ -128,65 +102,67 @@ router.get('/paper_id', function(req, res, next) {
       var citations = doc.citations
       var references = doc.references
       console.log(citations.length)
-      citations.forEach(ref => {
-        requestPaper(base_url + ref.paperId)
-          .then(doc => {
-            citation_topics = [];
-            // console.log(doc.body.citations.length)
-            doc.body.topics.forEach(top => {
-              citation_topics.push(top.topicId)
-            })
-            var is_in = 0;
-            citation_topics.forEach(top => {
-              if (paper_topics.includes(top)) {
-                is_in += 1;
-              }
-            })
-            doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
-            if (is_in >= param_topic_cit) {
-              socket.emit('new_node', doc.body);
-            } else {
-              waiting_papers.push(doc.body)
-            }
-
-          })
-          .catch(err => {
-            console.log(err.message)
-          })
-          .finally(() => {
-            counter += 1;
-          })
-      })
-      references.forEach(ref => {
-        requestPaper(base_url + ref.paperId)
-          .then(doc => {
-            ref_topics = [];
-            doc.body.topics.forEach(top => {
-              ref_topics.push(top.topicId);
-            })
-            var is_in = 0;
-
-            ref_topics.forEach(top => {
-              if (paper_topics.includes(top)) {
-                is_in += 1
-              }
-            })
-            if (is_in >= param_topic_ref) {
-              socket.emit('new_node', doc.body);
-            } else {
-              waiting_papers.push(doc.body)
-            }
-
-          })
-          .catch(err => {
-            console.log(err.message)
-          })
-
-          .finally(() => {
-            counter += 1;
-          })
-      })
-
+      xplore(base_url, citations, 0, 0, socket)
+      xplore(url_sem, references, 0, 0, socket)
+      // citations.forEach(ref => {
+      //   requestPaper(base_url + ref.paperId)
+      //     .then(doc => {
+      //       citation_topics = [];
+      //       // console.log(doc.body.citations.length)
+      //       doc.body.topics.forEach(top => {
+      //         citation_topics.push(top.topicId)
+      //       })
+      //       var is_in = 0;
+      //       citation_topics.forEach(top => {
+      //         if (paper_topics.includes(top)) {
+      //           is_in += 1;
+      //         }
+      //       })
+      //       doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
+      //       if (is_in >= param_topic_cit) {
+      //         socket.emit('new_node', doc.body);
+      //       } else {
+      //         waiting_papers.push(doc.body)
+      //       }
+      //
+      //     })
+      //     .catch(err => {
+      //       console.log(err.message)
+      //     })
+      //     .finally(() => {
+      //       counter += 1;
+      //     })
+      // })
+      // references.forEach(ref => {
+      //   requestPaper(base_url + ref.paperId)
+      //     .then(doc => {
+      //       ref_topics = [];
+      //       doc.body.topics.forEach(top => {
+      //         ref_topics.push(top.topicId);
+      //       })
+      //       var is_in = 0;
+      //
+      //       ref_topics.forEach(top => {
+      //         if (paper_topics.includes(top)) {
+      //           is_in += 1
+      //         }
+      //       })
+      //       if (is_in >= param_topic_ref) {
+      //         socket.emit('new_node', doc.body);
+      //       } else {
+      //         waiting_papers.push(doc.body)
+      //       }
+      //
+      //     })
+      //     .catch(err => {
+      //       console.log(err.message)
+      //     })
+      //
+      //     .finally(() => {
+      //       counter += 1;
+      //     })
+      // })
+      //
 
     })
     .catch(error => {
@@ -227,6 +203,28 @@ requestPaper = function(url) {
       .catch(err => {
         reject(err)
       })
+  })
+}
+
+xplore = function(url, papers, index, timeout, socket) {
+  console.log("PARAMS = ", index, timeout)
+  requestPaper(url+papers[index].paperId)
+  .then(res => {
+    res = res.body;
+    //console.log("XPLORE = " + res.title);
+    res.cdpScore = computeCpDScore(res, 2)
+    socket.emit('new_node', res);
+    if(index < papers.length-1) {
+      console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
+      index = index+1;
+      setTimeout(xplore, timeout, url, papers, index, timeout, socket);
+    }
+  })
+  .catch(err => {
+    console.log(err.message)
+    console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
+
+    setTimeout(xplore, timeout+200, url, papers, index, timeout, socket);
   })
 }
 
