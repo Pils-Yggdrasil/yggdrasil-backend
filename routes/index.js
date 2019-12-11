@@ -32,11 +32,32 @@ router.get('/key_words', function(req, res, next) {
     var url_sem = 'http://api.semanticscholar.org/v1/paper/'
     //var key_words = req.query.key_words.replace(/ /g, "+");
     var key_words = "Gradient based learning";
-    url_cross = url_cross + key_words + "&facet=publisher-name:10&rows=25&sort=relevance&order=desc"
+    url_cross = url_cross + key_words + "&facet=publisher-name:10&rows=10&sort=relevance&order=desc"
     res.json({
       success: true
     })
-
+    requestPaper(url_cross)
+    .then(list => {
+      list = list = list.body.message.items;
+      list.forEach(paper => {
+        requestPaper(url_sem + paper.DOI)
+        .then(pap => {
+          pap = pap.body;
+          console.log("TITLE = " + pap.title)
+          pap.cdpScore = computeCpDScore(pap, 2)
+          socket.emit('new_node', pap);
+          xplore(url_sem, pap.citations, 0, 0, socket)
+          xplore(url_sem, pap.references, 0, 0, socket)
+        })
+        .catch(err => {
+          console.log(err.message)
+        })
+      })
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
+    /*
     requestPaper(url_cross)
       .then(list => {
         list = list.body.message.items;
@@ -48,6 +69,7 @@ router.get('/key_words', function(req, res, next) {
               pap.cdpScore = computeCpDScore(pap, 2)
               socket.emit('new_node', pap);
               pap.citations.forEach(citation => {
+                nb_cit--;
                 requestPaper(url_sem + citation.paperId)
                   .then(cit => {
                     cit = cit.body;
@@ -56,7 +78,7 @@ router.get('/key_words', function(req, res, next) {
                     socket.emit('new_node', cit);
                   })
                   .catch(err => {
-                    console.log(err.message)
+                    console.log("CITATION = " + err.message)
                   })
               })
               pap.references.forEach(reference => {
@@ -68,7 +90,7 @@ router.get('/key_words', function(req, res, next) {
                     socket.emit('new_node', ref);
                   })
                   .catch(err => {
-                    console.log(err.message)
+                    console.log("REFERENCE =" + err.message)
                   })
               })
 
@@ -82,7 +104,7 @@ router.get('/key_words', function(req, res, next) {
         console.log(err.message)
       })
       .finally()
-
+      */
   } catch (err) {
     console.log(err.message)
     res.json({
@@ -234,6 +256,28 @@ requestPaper = function(url) {
       .catch(err => {
         reject(err)
       })
+  })
+}
+
+xplore = function(url, papers, index, timeout, socket) {
+  console.log("PARAMS = ", index, timeout)
+  requestPaper(url+papers[index].paperId)
+  .then(res => {
+    res = res.body;
+    //console.log("XPLORE = " + res.title);
+    res.cdpScore = computeCpDScore(res, 2)
+    socket.emit('new_node', res);
+    if(index < papers.length-1) {
+      console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
+      index = index+1;
+      setTimeout(xplore, timeout, url, papers, index, timeout, socket);
+    }
+  })
+  .catch(err => {
+    console.log(err.message)
+    console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
+
+    setTimeout(xplore, timeout+200, url, papers, index, timeout, socket);
   })
 }
 
