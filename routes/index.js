@@ -104,66 +104,6 @@ router.get('/paper_id', function(req, res, next) {
       console.log(citations.length)
       xplore(base_url, citations, 0, 0, socket)
       xplore(url_sem, references, 0, 0, socket)
-      // citations.forEach(ref => {
-      //   requestPaper(base_url + ref.paperId)
-      //     .then(doc => {
-      //       citation_topics = [];
-      //       // console.log(doc.body.citations.length)
-      //       doc.body.topics.forEach(top => {
-      //         citation_topics.push(top.topicId)
-      //       })
-      //       var is_in = 0;
-      //       citation_topics.forEach(top => {
-      //         if (paper_topics.includes(top)) {
-      //           is_in += 1;
-      //         }
-      //       })
-      //       doc.body.cdpScore = computeCpDScore(doc.body, param_exponent_cit)
-      //       if (is_in >= param_topic_cit) {
-      //         socket.emit('new_node', doc.body);
-      //       } else {
-      //         waiting_papers.push(doc.body)
-      //       }
-      //
-      //     })
-      //     .catch(err => {
-      //       console.log(err.message)
-      //     })
-      //     .finally(() => {
-      //       counter += 1;
-      //     })
-      // })
-      // references.forEach(ref => {
-      //   requestPaper(base_url + ref.paperId)
-      //     .then(doc => {
-      //       ref_topics = [];
-      //       doc.body.topics.forEach(top => {
-      //         ref_topics.push(top.topicId);
-      //       })
-      //       var is_in = 0;
-      //
-      //       ref_topics.forEach(top => {
-      //         if (paper_topics.includes(top)) {
-      //           is_in += 1
-      //         }
-      //       })
-      //       if (is_in >= param_topic_ref) {
-      //         socket.emit('new_node', doc.body);
-      //       } else {
-      //         waiting_papers.push(doc.body)
-      //       }
-      //
-      //     })
-      //     .catch(err => {
-      //       console.log(err.message)
-      //     })
-      //
-      //     .finally(() => {
-      //       counter += 1;
-      //     })
-      // })
-      //
-
     })
     .catch(error => {
       res.json({
@@ -185,7 +125,7 @@ testTopics = function(doc, topics_full, topics) {
 }
 
 computeCpDScore = function(doc, exponent) {
-  let age = new Date().getFullYear() - doc.year;
+  let age = new Date().getFullYear() - parseInt(doc.year);
   return doc.citations.length / Math.pow(age + 1, 1 / exponent)
 }
 
