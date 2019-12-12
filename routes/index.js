@@ -31,7 +31,7 @@ router.get('/key_words', function(req, res, next) {
     var url_cross = "https://api.crossref.org/works?filter=type:journal-article&query.bibliographic="
     var url_sem = 'http://api.semanticscholar.org/v1/paper/'
     var key_words = req.query.paper_id.replace(/ /g, "+");
-    key_words = "Gradient based learning";
+    // key_words = "Gradient based learning";
     url_cross = url_cross + key_words + "&facet=publisher-name:10&rows=25&sort=relevance&order=desc"
     res.json({
       success: true
@@ -103,7 +103,8 @@ router.get('/paper_id', function(req, res, next) {
       var references = doc.references
       console.log(citations.length)
       xplore(base_url, citations, 0, 0, socket)
-      xplore(url_sem, references, 0, 0, socket)
+      console.log("lookieng for references too")
+      xplore(base_url, references, 0, 0, socket)
     })
     .catch(error => {
       res.json({
