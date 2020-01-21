@@ -83,7 +83,7 @@ router.get('/paper_id', function(req, res, next) {
   var sockets = require('../sockets/socket_manager.js').sockets
   console.log("# of connections : ", sockets.length)
   console.log("This socket is ", socket_id)
-  // paper_id = req.query.paper_id
+  paper_id = req.query.paper_id
 
   var socket = sockets.find(sock => sock.id == socket_id)
   console.log(socket.id)
