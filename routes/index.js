@@ -148,7 +148,6 @@ requestPaper = function(url) {
 xplore = function(url, papers, index, timeout, socket) {
   var sockets = require('../sockets/socket_manager.js').sockets
   if (!sockets.map(s => s.id).includes(socket.id)){
-    console.log("I stop myself")
     return;
   }
   console.log("PARAMS = ", index, timeout, socket.id)
