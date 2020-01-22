@@ -37,26 +37,26 @@ router.get('/key_words', function(req, res, next) {
       success: true
     })
     requestPaper(url_cross)
-    .then(list => {
-      list = list.body.message.items;
-      list.forEach(paper => {
-        requestPaper(url_sem + paper.DOI)
-        .then(pap => {
-          pap = pap.body;
-          console.log("TITLE = " + pap.title)
-          pap.cdpScore = computeCpDScore(pap, 2)
-          socket.emit('new_node', pap);
-          xplore(url_sem, pap.citations, 0, 0, socket)
-          xplore(url_sem, pap.references, 0, 0, socket)
-        })
-        .catch(err => {
-          console.log(err.message)
+      .then(list => {
+        list = list.body.message.items;
+        list.forEach(paper => {
+          requestPaper(url_sem + paper.DOI)
+            .then(pap => {
+              pap = pap.body;
+              console.log("TITLE = " + pap.title)
+              pap.cdpScore = computeCpDScore(pap, 2)
+              socket.emit('new_node', pap);
+              xplore(url_sem, pap.citations, 0, 0, socket)
+              xplore(url_sem, pap.references, 0, 0, socket)
+            })
+            .catch(err => {
+              console.log(err.message)
+            })
         })
       })
-    })
-    .catch(err => {
-      console.log(err.message)
-    })
+      .catch(err => {
+        console.log(err.message)
+      })
   } catch (err) {
     console.log(err.message)
     res.json({
@@ -64,8 +64,6 @@ router.get('/key_words', function(req, res, next) {
     })
   }
 })
-
-
 
 router.get('/paper_id', function(req, res, next) {
   let paper_id = "0796f6cd7f0403a854d67d525e9b32af3b277331"
@@ -148,25 +146,29 @@ requestPaper = function(url) {
 }
 
 xplore = function(url, papers, index, timeout, socket) {
-  console.log("PARAMS = ", index, timeout)
-  requestPaper(url+papers[index].paperId)
-  .then(res => {
-    res = res.body;
-    //console.log("XPLORE = " + res.title);
-    res.cdpScore = computeCpDScore(res, 2)
-    socket.emit('new_node', res);
-    if(index < papers.length-1) {
+  var sockets = require('../sockets/socket_manager.js').sockets
+  if (!sockets.map(s => s.id).includes(socket.id)){
+    return;
+  }
+  console.log("PARAMS = ", index, timeout, socket.id)
+  requestPaper(url + papers[index].paperId)
+    .then(res => {
+      res = res.body;
+      //console.log("XPLORE = " + res.title);
+      res.cdpScore = computeCpDScore(res, 2)
+      socket.emit('new_node', res);
+      if (index < papers.length - 1) {
+        console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
+        index = index + 1;
+        setTimeout(xplore, timeout, url, papers, index, timeout, socket);
+      }
+    })
+    .catch(err => {
+      console.log(err.message)
       console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
-      index = index+1;
-      setTimeout(xplore, timeout, url, papers, index, timeout, socket);
-    }
-  })
-  .catch(err => {
-    console.log(err.message)
-    console.log("PARAMS 2 = ", url, papers.length, index, timeout, socket.id)
 
-    setTimeout(xplore, timeout+200, url, papers, index, timeout, socket);
-  })
+      setTimeout(xplore, timeout + 200, url, papers, index, timeout, socket);
+    })
 }
 
 
