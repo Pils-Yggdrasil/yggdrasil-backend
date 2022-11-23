@@ -17,6 +17,6 @@
     "path": "^0.12.7",
     "request": "^2.88.0",
     "request-promise": "^4.2.5",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.5.0"
   }
 }
